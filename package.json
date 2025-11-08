@@ -1,0 +1,19 @@
+{
+  "name": "moomoo-clone-website",
+  "version": "1.0.0",
+  "description": "Simple Express hello world server",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": [
+    "express",
+    "hello-world"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}

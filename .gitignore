@@ -1,0 +1,32 @@
+# Dependency directories
+node_modules/
+
+# Build outputs
+dist/
+build/
+
+# Logs and runtime files
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+*.log
+*.pid
+*.seed
+*.tgz
+.DS_Store
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Coverage and test outputs
+coverage/
+.nyc_output/
+
+# Editor caches / settings
+.vscode/
+.idea/
+*.swp
+*.swo

@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>MooMooTwo - Game Hub</title>
+    <link rel="shortcut icon" type="image/png" href="./img/crown.png" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=0">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="description" content="MooMoo.io Game Hub - Your central hub for game information, resources, documentation, and server selection">
+    <meta name="keywords" content="game,games,gaming,online,io,multiplayer,moomoo,village,farm">
+    <meta http-equiv="cache-control" content="no-cache">
+    <meta http-equiv="expires" content="0">
+    <meta http-equiv="pragma" content="no-cache">
+    <link rel="stylesheet" href="./main.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Hammersmith+One&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+
+<body>
+    <canvas id="backgroundCanvas" aria-hidden="true"></canvas>
+    <!-- Top Navigation Bar 123-->
+    <nav id="topNavBar">
+        <div class="navContainer">
+            <div class="navBrand">
+                <img src="./img/crown.png" alt="Leader crown" class="navLogoIcon">
+            </div>
+            <div class="navLinks">
+                <a href="#hero" class="navLink active">
+                    <i class="material-icons">&#xE88A;</i>
+                    <span>Home</span>
+                </a>
+                <a href="#servers" class="navLink">
+                    <i class="material-icons">&#xE328;</i>
+                    <span>Servers</span>
+                </a>
+                <a href="#resources" class="navLink">
+                    <i class="material-icons">&#xE54E;</i>
+                    <span>Resources</span>
+                </a>
+            </div>
+            <div class="navActions">
+                <a href="" class="navButton playButton">
+                    <i class="material-icons">&#xE037;</i>
+                    <span>Practice Server</span>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section with Server Selection -->
+    <section id="hero">
+        <div class="heroContent">
+            <div id="gameLogo">MOOMOOTWO</div>
+            <div id="gameTagline">Build. Survive. Conquer.</div>
+            <div class="heroSubtext">Choose your server and join the battle!</div>
+
+            <!-- Server Selector - Primary Focus -->
+            <div id="servers">
+            <div id="serverSelector">
+                <div class="selectorHeader">
+                    <i class="material-icons">&#xE328;</i>
+                    <span>Select Your Server</span>
+                </div>
+
+                <!-- Game Mode Tabs -->
+                <div class="gameModeTabs">
+                    <div class="gameModeTab active" data-mode="og">
+                        <i class="material-icons">&#xE834;</i>
+                        <div class="tabContent">
+                            <div class="tabTitle">OG MooMoo.io</div>
+                            <div class="tabDesc">Classic Original Game</div>
+                        </div>
+                    </div>
+                    <div class="gameModeTab" data-mode="custom">
+                        <i class="material-icons">&#xE8B8;</i>
+                        <div class="tabContent">
+                            <div class="tabTitle">Custom MooMoo.io</div>
+                            <div class="tabDesc">Enhanced & Updated</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- OG Servers -->
+                <div class="serverGrid" id="ogServers">
+                    <div class="serverCard quickPlayCard" data-gamemode="og">
+                        <div class="quickPlayContent">
+                            <i class="material-icons quickPlayIcon">&#xE9E4;</i>
+                            <div class="quickPlayText">Quick Play</div>
+                            <div class="quickPlayDesc">Auto-select best server</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Custom Servers -->
+                <div class="serverGrid" id="customServers" style="display: none;">
+                </div>
+            </div>
+            </div>
+
+            <!-- Scroll Down Indicator -->
+            <div class="scrollIndicator">
+                <i class="material-icons">&#xE5DB;</i>
+                <span>Scroll for more info</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Additional Information Section -->
+    <section id="infoSection">
+        <div class="contentWrapper">
+
+            <!-- Resources Card -->
+            <div class="infoCardsGrid">
+                <div id="resources" class="infoCard">
+                    <div class="cardHeader">
+                        <i class="material-icons cardIcon">&#xE54E;</i>
+                        <span>Resources & Guides</span>
+                    </div>
+                    <div class="cardBody">
+                        <div class="resourceSection">
+                            <div class="resourceTitle">Game Mechanics</div>
+                            <div class="resourceLinks">
+                                <a href="#" class="resourceLink">
+                                    <i class="material-icons">&#xE85D;</i>
+                                    <span>Combat Guide</span>
+                                </a>
+                                <a href="#" class="resourceLink">
+                                    <i class="material-icons">&#xE869;</i>
+                                    <span>Building Strategies</span>
+                                </a>
+                                <a href="#" class="resourceLink">
+                                    <i class="material-icons">&#xE86E;</i>
+                                    <span>Resource Gathering</span>
+                                </a>
+                            </div>
+                        </div>
+                        <div class="resourceSection">
+                            <div class="resourceTitle">Items & Equipment</div>
+                            <div class="resourceLinks">
+                                <a href="#" class="resourceLink">
+                                    <i class="material-icons">&#xE90B;</i>
+                                    <span>Weapons Database</span>
+                                </a>
+                                <a href="#" class="resourceLink">
+                                    <i class="material-icons">&#xE8D1;</i>
+                                    <span>Hats & Accessories</span>
+                                </a>
+                                <a href="#" class="resourceLink">
+                                    <i class="material-icons">&#xE8B9;</i>
+                                    <span>Building Items</span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Updates Card -->
+                <div class="infoCard">
+                    <div class="cardHeader">
+                        <i class="material-icons cardIcon">&#xE923;</i>
+                        <span>Recent Updates</span>
+                    </div>
+                    <div class="cardBody">
+                        <div class="updatesList">
+                            <div class="updateItem">
+                                <div class="updateDate">November 2024</div>
+                                <div class="updateTitle">Version 1.6.9</div>
+                                <div class="updateDesc">Performance improvements and bug fixes for smoother gameplay experience.</div>
+                            </div>
+                            <div class="updateItem">
+                                <div class="updateDate">October 2024</div>
+                                <div class="updateTitle">New Weapons & Items</div>
+                                <div class="updateDesc">Added weapon variants system with XP-based progression and special abilities.</div>
+                            </div>
+                            <div class="updateItem">
+                                <div class="updateDate">September 2024</div>
+                                <div class="updateTitle">Clan System Enhanced</div>
+                                <div class="updateDesc">Improved clan management with better notification system and member controls.</div>
+                            </div>
+                        </div>
+                        <a href="../docs/versions.txt" target="_blank" class="viewAllButton">View All Updates</a>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer id="pageFooter">
+        <div class="footerContent">
+            <div class="footerCommunity">
+                <div class="footerCommunityTitle">Join Our Community</div>
+                <div class="footerCommunityLinks">
+                    <a href="https://discord.gg/NMS3YR9Q5R" target="_blank" class="footerCommunityButton discordButton">
+                        <i class="material-icons">&#xE0DA;</i>
+                        <span>Discord</span>
+                    </a>
+                    <a href="#" target="_blank" class="footerCommunityButton redditButton">
+                        <i class="material-icons">&#xE0C9;</i>
+                        <span>Reddit</span>
+                    </a>
+                    <a href="#" target="_blank" class="footerCommunityButton twitterButton">
+                        <i class="material-icons">&#xE80D;</i>
+                        <span>Twitter</span>
+                    </a>
+                </div>
+            </div>
+            <div class="footerLinks">
+                <a href="../index.html" class="footerLink">Back to Game</a>
+                <span class="footerSeparator">|</span>
+                <a href="../docs/versions.txt" target="_blank" class="footerLink">v1.6.9</a>
+                <span class="footerSeparator">|</span>
+                <a href="#" target="_blank" class="footerLink">Terms</a>
+                <span class="footerSeparator">|</span>
+                <a href="#" target="_blank" class="footerLink">Privacy</a>
+            </div>
+            <div class="footerText">Created by Yendis Entertainment</div>
+        </div>
+    </footer>
+
+        <script type="module" src="./main.js"></script>
+</body>
+
+</html>
