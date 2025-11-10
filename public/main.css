@@ -296,6 +296,27 @@ body > :not(#backgroundCanvas) {
     box-shadow: 0px 12px #b0b0b0;
 }
 
+/* Offline Server Styling */
+.serverCard.offline {
+    opacity: 0.5;
+    filter: grayscale(30%);
+}
+
+.serverCard.offline:hover {
+    opacity: 0.6;
+}
+
+.serverCard.offline .serverCardButton {
+    background: linear-gradient(135deg, #a0a0a0 0%, #808080 100%);
+    cursor: not-allowed;
+}
+
+.serverCard.offline .serverCardButton:hover {
+    background: linear-gradient(135deg, #a0a0a0 0%, #808080 100%);
+    transform: none;
+    box-shadow: none;
+}
+
 .serverCardTop {
     display: flex;
     align-items: center;

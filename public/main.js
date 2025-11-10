@@ -266,9 +266,11 @@ import { serverData } from "./serverData.js";
 
 const STANDARD_SERVER_ICON = "&#xE55B;";
 const BUTTON_CONFIG = {
+    play: { className: "playButton", icon: "&#xE037;", text: "Play" },
     normal: { className: "normalButton", icon: "&#xE838;", text: "Join Normal" },
     sandbox: { className: "sandboxButton", icon: "&#xE8B9;", text: "Join Sandbox" },
 };
+const PING_TIMEOUT_MS = 4000;
 
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initializeServerUI);
@@ -278,6 +280,7 @@ if (document.readyState === 'loading') {
 
 function initializeServerUI() {
     renderServers();
+    initServerPings();
     initGameModeTabs();
     initQuickPlayCard();
     initNavigationLinks();
@@ -317,11 +320,187 @@ function renderServers() {
     });
 }
 
+function initServerPings() {
+    const pingGroups = [
+        { servers: serverData?.og || [], category: 'og' },
+        { servers: serverData?.custom || [], category: 'custom' }
+    ];
+
+    pingGroups.forEach(({ servers, category }) => {
+        servers.forEach(server => {
+            if (server?.link) {
+                measurePingForServer(server, category);
+            }
+        });
+    });
+}
+
+async function measurePingForServer(server, category) {
+    const pingUrl = buildPingUrl(server.link);
+    if (!pingUrl) {
+        return;
+    }
+
+    try {
+        const latency = await fetchPingWithFallback(pingUrl);
+        applyPingResult(server, category, latency);
+    } catch (error) {
+        console.error(`Failed to measure ping for ${server.name}:`, error);
+        applyPingFailure(server, category);
+    }
+}
+
+function buildPingUrl(baseUrl) {
+    if (!baseUrl) {
+        return '';
+    }
+    const normalizedBase = baseUrl.replace(/\/+$/, '');
+    return `${normalizedBase}/ping`;
+}
+
+async function fetchPingWithFallback(url) {
+    try {
+        return await executePingRequest(url, 'cors');
+    } catch (error) {
+        if (error?.name === 'TypeError') {
+            return executePingRequest(url, 'no-cors');
+        }
+        throw error;
+    }
+}
+
+async function executePingRequest(url, mode) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), PING_TIMEOUT_MS);
+    const startTime = performance.now();
+
+    try {
+        const response = await fetch(url, {
+            method: 'GET',
+            cache: 'no-store',
+            mode,
+            signal: controller.signal,
+            credentials: 'omit'
+        });
+        await logPingResponse(url, response);
+        return Math.max(1, Math.round(performance.now() - startTime));
+    } catch (error) {
+        if (error.name === 'AbortError') {
+            throw new Error('Ping request timed out');
+        }
+        throw error;
+    } finally {
+        clearTimeout(timeoutId);
+    }
+}
+
+async function logPingResponse(url, response) {
+    if (!response) {
+        console.log(`[Ping] ${url} returned no response object`);
+        return;
+    }
+
+    if (response.type === 'opaque') {
+        console.log(`[Ping] ${url} responded with an opaque ${response.type} response (body unavailable)`);
+        return;
+    }
+
+    try {
+        const rawBody = await response.clone().text();
+        const cleanedBody = rawBody.trim();
+        const snippet = cleanedBody.length > 200 ? `${cleanedBody.slice(0, 200)}…` : cleanedBody || '<empty response>';
+        console.log(`[Ping] ${url} responded (${response.status})`, snippet);
+    } catch (readError) {
+        console.log(`[Ping] ${url} responded (${response.status}) but body could not be read: ${readError.message}`);
+    }
+}
+
+function applyPingResult(server, category, latency) {
+    server.ping = formatPing(latency);
+    server.status = {
+        ...(server.status || {}),
+        label: 'Online',
+        state: 'online'
+    };
+    updateServerCardStats(server, category);
+}
+
+function applyPingFailure(server, category) {
+    server.ping = { value: 'N/A', quality: '' };
+    server.status = {
+        ...(server.status || {}),
+        label: 'Offline',
+        state: 'offline'
+    };
+    updateServerCardStats(server, category);
+}
+
+function formatPing(latency) {
+    const ms = Math.max(1, Math.round(latency));
+    return {
+        value: `${ms}ms`,
+        quality: getPingQuality(ms)
+    };
+}
+
+function getPingQuality(ms) {
+    if (ms <= 80) {
+        return 'good';
+    }
+    if (ms <= 160) {
+        return 'medium';
+    }
+    return 'high';
+}
+
+function getServerCard(server, category) {
+    const selector = `.serverCard[data-region="${server.id}"][data-category="${category}"]`;
+    return document.querySelector(selector);
+}
+
+function updateServerCardStats(server, category) {
+    const card = getServerCard(server, category);
+    if (!card) {
+        return;
+    }
+    updateStatItemValue(card, 'ping', server.ping?.value || 'N/A', server.ping?.quality);
+    updateStatItemValue(card, 'players', server.players || '0', '');
+    updateStatItemValue(card, 'status', server.status?.label || 'Offline', server.status?.state || '');
+
+    // Update offline class based on status
+    if (server.status?.state === 'offline') {
+        card.classList.add('offline');
+    } else {
+        card.classList.remove('offline');
+    }
+}
+
+function updateStatItemValue(card, statKey, value, valueClass) {
+    const stat = card.querySelector(`.statItem[data-stat="${statKey}"]`);
+    if (!stat) {
+        return;
+    }
+    const valueElement = stat.querySelector('.statValue');
+    if (!valueElement) {
+        return;
+    }
+    valueElement.textContent = value;
+    valueElement.className = 'statValue';
+    if (valueClass) {
+        valueElement.classList.add(valueClass);
+    }
+}
+
 function buildStandardServerCard(server, category) {
     const card = document.createElement('div');
     card.className = 'serverCard';
     card.dataset.region = server.id;
     card.dataset.category = category;
+
+    // Add offline class if server is offline
+    if (server.status?.state === 'offline') {
+        card.classList.add('offline');
+    }
 
     card.appendChild(buildServerCardTop(STANDARD_SERVER_ICON, server));
     card.appendChild(buildStatsSection(server));
@@ -334,6 +513,11 @@ function buildSpecialServerCard(server) {
     const card = document.createElement('div');
     card.className = `serverCard specialServer ${server.cardClass}`;
     card.dataset.type = server.type;
+
+    // Add offline class if server is offline
+    if (server.status?.state === 'offline') {
+        card.classList.add('offline');
+    }
 
     const badge = document.createElement('div');
     badge.className = `specialBadge ${server.badge.className}`;
@@ -367,11 +551,11 @@ function buildServerCardTop(iconCode, server) {
     name.className = 'serverCardName';
     name.textContent = server.name;
 
-    const region = document.createElement('div');
-    region.className = 'serverCardRegion';
-    region.textContent = server.region;
+    const type = document.createElement('div');
+    type.className = 'serverCardRegion';
+    type.textContent = server.type;
 
-    info.append(name, region);
+    info.append(name, type);
     top.append(info);
 
     return top;
@@ -389,6 +573,7 @@ function buildStatsSection(server) {
 function createStatItem(label, value, valueClass) {
     const stat = document.createElement('div');
     stat.className = 'statItem';
+    stat.dataset.stat = label.toLowerCase();
 
     const statLabel = document.createElement('span');
     statLabel.className = 'statLabel';
@@ -407,9 +592,18 @@ function createStatItem(label, value, valueClass) {
 
 function buildStandardButtons(server, category) {
     const buttons = document.createElement('div');
-    buttons.className = 'serverButtons';
-    buttons.appendChild(createServerButton('normal', () => joinServer(server, 'normal', category)));
-    buttons.appendChild(createServerButton('sandbox', () => joinServer(server, 'sandbox', category)));
+    buttons.className = 'serverButtons singleButton';
+
+    const handler = () => {
+        // Check current status dynamically when clicked
+        if (server.status?.state === 'offline') {
+            alert('This server is currently offline.');
+        } else {
+            joinServer(server, server.type.toLowerCase(), category);
+        }
+    };
+
+    buttons.appendChild(createServerButton('play', handler));
     return buttons;
 }
 
@@ -487,13 +681,11 @@ function initGameModeTabs() {
 }
 
 function joinServer(server, mode, category) {
-    const gameMode = category === 'custom' ? 'custom' : 'og';
-    alert(`Connecting to ${server.name} server...
-Game Mode: ${gameMode.toUpperCase()}
-Server Type: ${mode.charAt(0).toUpperCase() + mode.slice(1)}
-
-This will redirect to the game page.`);
-    window.location.href = '../index.html';
+    if (server.link) {
+        window.location.href = server.link;
+    } else {
+        alert(`This server does not have a link configured yet.`);
+    }
 }
 
 function joinPrivateServer(server) {
