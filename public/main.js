@@ -342,8 +342,8 @@ async function measurePingForServer(server, category) {
     }
 
     try {
-        const latency = await fetchPingWithFallback(pingUrl);
-        applyPingResult(server, category, latency);
+        const result = await fetchPingWithFallback(pingUrl);
+        applyPingResult(server, category, result.latency, result.data);
     } catch (error) {
         console.error(`Failed to measure ping for ${server.name}:`, error);
         applyPingFailure(server, category);
@@ -382,8 +382,9 @@ async function executePingRequest(url, mode) {
             signal: controller.signal,
             credentials: 'omit'
         });
-        await logPingResponse(url, response);
-        return Math.max(1, Math.round(performance.now() - startTime));
+        const data = await parsePingResponse(url, response);
+        const latency = Math.max(1, Math.round(performance.now() - startTime));
+        return { latency, data };
     } catch (error) {
         if (error.name === 'AbortError') {
             throw new Error('Ping request timed out');
@@ -394,15 +395,15 @@ async function executePingRequest(url, mode) {
     }
 }
 
-async function logPingResponse(url, response) {
+async function parsePingResponse(url, response) {
     if (!response) {
         console.log(`[Ping] ${url} returned no response object`);
-        return;
+        return null;
     }
 
     if (response.type === 'opaque') {
         console.log(`[Ping] ${url} responded with an opaque ${response.type} response (body unavailable)`);
-        return;
+        return null;
     }
 
     try {
@@ -410,18 +411,40 @@ async function logPingResponse(url, response) {
         const cleanedBody = rawBody.trim();
         const snippet = cleanedBody.length > 200 ? `${cleanedBody.slice(0, 200)}…` : cleanedBody || '<empty response>';
         console.log(`[Ping] ${url} responded (${response.status})`, snippet);
+
+        // Try to parse JSON response
+        if (cleanedBody && response.ok) {
+            try {
+                const data = JSON.parse(cleanedBody);
+                return data;
+            } catch (jsonError) {
+                console.log(`[Ping] Could not parse JSON from ${url}:`, jsonError.message);
+            }
+        }
+        return null;
     } catch (readError) {
         console.log(`[Ping] ${url} responded (${response.status}) but body could not be read: ${readError.message}`);
+        return null;
     }
 }
 
-function applyPingResult(server, category, latency) {
+function applyPingResult(server, category, latency, data) {
     server.ping = formatPing(latency);
     server.status = {
         ...(server.status || {}),
         label: 'Online',
         state: 'online'
     };
+
+    // Extract player count from ping response data
+    if (data && data.players) {
+        if (typeof data.players.totalConnected !== 'undefined') {
+            server.players = `${data.players.totalConnected}`;
+        } else if (typeof data.players.activeCount !== 'undefined') {
+            server.players = `${data.players.activeCount}`;
+        }
+    }
+
     updateServerCardStats(server, category);
 }
 
